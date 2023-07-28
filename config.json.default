@@ -1,0 +1,39 @@
+{
+	"database": {
+		"database": "postgres",
+		"host": "/var/run/postgresql",
+		"port": 5432,
+		"user": "postgres"
+	},
+	"mailer": {
+		"account": {
+			"from": {
+				"address": /* address */,
+				"name": /* name */
+			}
+		},
+		"transport": {
+			"auth": {
+				"pass": /* password */,
+				"user": /* address */
+			},
+			"host": "smtp.163.com",
+			"port": 465,
+			"secure": true
+		},
+		"pop3": {
+			"host": "pop.163.com",
+			"pass": /* password */,
+			"port": 995,
+			"user": /* user */
+		}
+	},
+	"mirai": {
+		"port": 8080,
+		"qq": /* qq */,
+		"verifyKey": /* verify key */
+	},
+	"PRF": {
+		/* config */
+	}
+}

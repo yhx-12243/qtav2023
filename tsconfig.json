@@ -1,0 +1,13 @@
+{
+	"compilerOptions": {
+		"esModuleInterop": true,
+		"experimentalDecorators": true,
+		"module": "esnext",
+		"moduleResolution": "node",
+		"resolveJsonModule": true,
+		"rootDir": ".",
+		"strict": true,
+		"target": "esnext",
+	},
+	"include": ["src/**/*", "thudb/**/*"],
+}
