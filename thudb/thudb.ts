@@ -1,13 +1,14 @@
-#!/usr/bin/env node
-
 import { strict as assert } from 'assert';
 import { readFileSync } from 'fs';
 import { type RequestOptions, request as httpRequest, IncomingHttpHeaders } from 'http';
 import { request as httpsRequest } from 'https';
 import pg from 'pg';
+import Client = pg.Client;
 import { pinyin } from 'pinyin-pro';
 
-const conn = new pg.Client({ user: 'test', database: 'postgres', host: '/tmp' });
+import config from '../config.json' assert { type: 'json' };
+
+const conn = new Client(config.database);
 await conn.connect();
 
 function request(config: RequestOptions & { end: boolean }): Promise<[IncomingHttpHeaders, Buffer]> {
@@ -116,7 +117,7 @@ function getAvailableUid(name: string) {
 }
 
 const STOP = '@0';
-async function fetchUid(sessionid = 'kiop4rnqv2xma7w31hxei8yjr8xp477m') {
+async function fetchUid(sessionid = config.thudb.tokens.cloudSessionId) {
 	const noUID = [];
 
 	for (const entry of thudb) {
@@ -176,7 +177,7 @@ async function fetchUid(sessionid = 'kiop4rnqv2xma7w31hxei8yjr8xp477m') {
 	}
 }
 
-async function fetchFromGitTsinghua(token = '13dEfb6CF4a4m-cC7s3u') {
+async function fetchFromGitTsinghua(token = config.thudb.tokens.gitTsinghua) {
 	type Data = { name: string, username: string };
 	const datalist: Data[][] = []; let flags = true;
 	for (let page = 1; flags; ++page) {
@@ -236,6 +237,6 @@ const exit = () => process.exit(0);
 
 // fetchUid().then(exit);
 
-fetchFromGitTsinghua().then(exit);
+// fetchFromGitTsinghua().then(exit);
 
 export { thudb };

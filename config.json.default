@@ -1,4 +1,8 @@
 {
+	"contact": {
+		"address": /* contact email */,
+		"name": /* contact name */
+	},
 	"database": {
 		"database": "postgres",
 		"host": "/var/run/postgresql",
@@ -34,6 +38,15 @@
 		"verifyKey": /* verify key */
 	},
 	"PRF": {
-		/* config */
+		/* PRF configs */
+	},
+	"security": {
+		"tokenExpire": /* token expire time (in seconds), normally 3600 */
+	},
+	"thudb": {
+		"tokens": {
+			"cloudSessionId": /* "sessionid" cookie in cloud.tsinghua.edu.cn */,
+			"gitTsinghua": /* gitlab token */
+		}
 	}
 }

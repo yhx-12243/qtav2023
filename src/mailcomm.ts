@@ -2,7 +2,7 @@ import assert from 'assert';
 import { readFile, writeFile } from 'fs/promises';
 import { resolve } from 'path';
 
-import { ROOT } from './app';
+import { ROOT, config } from './app';
 import { pool } from './libs/db';
 import { POP3Socket, sendMail } from './libs/email';
 import { getLogger } from './libs/log';
@@ -159,7 +159,7 @@ async function checkMailBox() {
 			});
 		}
 
-		const prf = PRF(id, uid, qq, Math.floor(new Date().getTime() / 36e5));
+		const prf = PRF(id, uid, qq, Math.floor(new Date().getTime() / (config.security.tokenExpire * 1e3)));
 		LOGGER(' -> prf = %o', prf);
 		await sendMail({
 			to: { name, address: `${qq}@qq.com`, },
@@ -170,7 +170,7 @@ code{background-color:rgba(0,0,0,.08);border-radius:3px;display:inline-block;fon
 <p>${name} 同学您好！</p><p>您正在使用 xxxx 新生群自动审核功能，</p>\
 <p>请再次确认您的个人信息无误：您的学号为 ${id}，用户名为 ${uid}。</p>\
 <p>加群的验证码 (即回答的问题) 为 <code>${prf}</code>，有效期 60 分钟。</p>\
-<p>如遇到困难，请联系 <a href="mailto:jkjkmxmx&lt;452558781@qq.com&gt;">452558781@qq.com</a> 或直接在审核群里提出。</p>\
+<p>如遇到困难，请联系 <a href="mailto:${config.contact.name}&lt;${config.contact.address}&gt;">${config.contact.address}</a> 或直接在审核群里提出。</p>\
 <p>（注：若非本人操作，请忽略此邮件）</p>`
 		});
 	}

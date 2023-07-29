@@ -25,7 +25,7 @@ export function validate(qq: number, time: number, ct: string): { id: number, ui
 /** 正确的实现应当能通过如下测试 */
 export function test() {
 	const LOGGER = getLogger('PRF:test');
-	const t = Math.floor(new Date().getTime() / 36e5);
+	const t = Math.floor(new Date().getTime() / (config.security.tokenExpire * 1e3));
 	const id = 2021011832, uid = 'example21', qq = 123456789;
 	const code = PRF(id, uid, qq, t);
 	const fake = (code[0] === '0' ? '1' : '0') + code.substring(1)
