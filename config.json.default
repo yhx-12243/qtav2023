@@ -34,6 +34,9 @@
 	},
 	"mirai": {
 		"port": 8080,
+		"groups": [
+			/* QQ groups */
+		],
 		"qq": /* qq */,
 		"verifyKey": /* verify key */
 	},

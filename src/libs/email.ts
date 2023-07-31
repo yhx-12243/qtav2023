@@ -3,19 +3,20 @@ import EventEmitter from 'events';
 import { simpleParser } from 'mailparser';
 import { Transporter, createTransport } from 'nodemailer';
 import Mail from 'nodemailer/lib/mailer';
-import { SentMessageInfo } from 'nodemailer/lib/smtp-transport/index.js';
+import type { SentMessageInfo } from 'nodemailer/lib/smtp-transport/index.js';
 import { Interface, createInterface } from 'readline';
 import { connect, type TLSSocket } from 'tls';
 
 import { config } from '../app';
 import { checkIntRange } from '../util';
-import { getLogger } from './log';
+import { type LOGGER_TYPE, getLogger } from './log';
 
-const LOGGER = getLogger('email');
+let LOGGER: LOGGER_TYPE;
 
 let transporter: Transporter<SentMessageInfo>;
 
 export function bootstrap() {
+	LOGGER = getLogger('email');
 	transporter = createTransport(config.mailer.transport, config.mailer.account);
 }
 

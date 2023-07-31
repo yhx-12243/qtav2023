@@ -16,7 +16,7 @@
 		"@types/pg": "^8.10.2",
 		"@types/ws": "^8.5.5",
 		"@typescript-eslint/eslint-plugin": "^6.2.0",
-		"eslint": "^8.45.0",
+		"eslint": "^8.46.0",
 		"pinyin-pro": "^3.16.1",
 		"tsx": "^3.12.7"
 	},
@@ -28,8 +28,8 @@
 	"private": true,
 	"scripts": {
 		"check": "tsc --noEmit",
-		"dev": "DEBUG=* DEBUG_BREAK_LENGTH=160 tsx src/app",
-		"start": "tsx src/app",
+		"dev": "DEBUG=* DEBUG_BREAK_LENGTH=160 tsx --no-warnings src/app",
+		"start": "tsx --no-warnings src/app",
 		"lint": "eslint \"src/**/*.{ts,js,tsx,jsx}\""
 	},
 	"type": "module"

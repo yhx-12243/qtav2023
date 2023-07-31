@@ -5,12 +5,11 @@ import { resolve } from 'path';
 import { ROOT, config } from './app';
 import { pool } from './libs/db';
 import { POP3Socket, sendMail } from './libs/email';
-import { getLogger } from './libs/log';
+import { type LOGGER_TYPE, getLogger } from './libs/log';
 import { PRF } from './libs/prf';
 import { checkIntRange, getNextNumber, isDigit, sleep } from './util';
 
-const LOGGER = getLogger('mailServer');
-const LOGGER_STAGE = getLogger('mailServer:stage');
+let LOGGER: LOGGER_TYPE, LOGGER_STAGE: LOGGER_TYPE;
 
 const
 	DURATION = 30_000,
@@ -114,7 +113,7 @@ async function checkMailBox() {
 			try {
 				const result = await pool.query({
 					name: 'fetch-id-from-name',
-					text: `select id, uid from thudb where id between $1 and $2 and name = $3`,
+					text: 'select id, uid from thudb where id between $1 and $2 and name = $3',
 					values: [year * 1000000 + 10001, year * 1000000 + 999999, name]
 				});
 				if (result.rowCount !== result.rows.length) { LOGGER('db q2 error'); continue; }
@@ -159,7 +158,9 @@ async function checkMailBox() {
 			});
 		}
 
-		const prf = PRF(id, uid, qq, Math.floor(new Date().getTime() / (config.security.tokenExpire * 1e3)));
+		const
+			time = Math.floor(new Date().getTime() / (config.security.tokenExpire * 1e3)),
+			prf = PRF(id, uid, qq, time);
 		LOGGER(' -> prf = %o', prf);
 		await sendMail({
 			to: { name, address: `${qq}@qq.com`, },
@@ -180,6 +181,9 @@ code{background-color:rgba(0,0,0,.08);border-radius:3px;display:inline-block;fon
 }
 
 export async function mailServer() {
+	LOGGER = getLogger('mailServer');
+	LOGGER_STAGE = getLogger('mailServer:stage');
+
 	try {
 		LC_PATH = resolve(ROOT, 'lastCheck');
 		lastCheck = Number(await readFile(LC_PATH, 'utf8'));

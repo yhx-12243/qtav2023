@@ -25,38 +25,38 @@ export function validate(qq: number, time: number, ct: string): { id: number, ui
 /** 正确的实现应当能通过如下测试 */
 export function test() {
 	const LOGGER = getLogger('PRF:test');
-	const t = Math.floor(new Date().getTime() / (config.security.tokenExpire * 1e3));
+	const time = Math.floor(new Date().getTime() / (config.security.tokenExpire * 1e3));
 	const id = 2021011832, uid = 'example21', qq = 123456789;
-	const code = PRF(id, uid, qq, t);
+	const code = PRF(id, uid, qq, time);
 	const fake = (code[0] === '0' ? '1' : '0') + code.substring(1)
 	LOGGER('code = %o', code);
 	{
-		const result = validate(qq, t, code);
+		const result = validate(qq, time, code);
 		LOGGER('result = %o', result);
 		assert(result?.id === id && result?.uid === uid);
 	}
 	{
-		const result = validate(qq, t + 1, code);
+		const result = validate(qq, time + 1, code);
 		LOGGER('succ[2] = %o', result);
 		assert(result?.id === id && result?.uid === uid);
 	}
 	{
-		const result = validate(qq + 1, t, code);
+		const result = validate(qq + 1, time, code);
 		LOGGER('fake[1] = %o', result);
 		assert(!result);
 	}
 	{
-		const result = validate(qq, t + 2, code);
+		const result = validate(qq, time + 2, code);
 		LOGGER('fake[2] = %o', result);
 		assert(!result);
 	}
 	{
-		const result = validate(qq, t - 1, code);
+		const result = validate(qq, time - 1, code);
 		LOGGER('fake[3] = %o', result);
 		assert(!result);
 	}
 	{
-		const result = validate(qq, t, fake);
+		const result = validate(qq, time, fake);
 		LOGGER('fake[4] = %o', result);
 		assert(!result);
 	}
