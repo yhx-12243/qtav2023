@@ -150,7 +150,7 @@ async function fetchUid(sessionid = config.thudb.tokens.cloudSessionId) {
 				host: 'cloud.tsinghua.edu.cn',
 				path: `/api2/search-user/?q=${entry.id}@tsinghua.edu.cn`,
 				protocol: 'https:'
-			}).then(async ([_, data_raw]) => {
+			}).then(async ([, data_raw]) => {
 				let data: { users: { contact_email: string }[] };
 				try {
 					data = JSON.parse(<string><unknown>data_raw);
@@ -172,7 +172,7 @@ async function fetchUid(sessionid = config.thudb.tokens.cloudSessionId) {
 		await Promise.all(promises);
 		if (++stamp % 100 === 0) {
 			console.log('sleeping %o / %o ...', stamp, noUID.length);
-			await new Promise((fulfill, reject) => setTimeout(fulfill, 2000));
+			await new Promise(fulfill => setTimeout(fulfill, 2000));
 		}
 	}
 }
@@ -190,7 +190,7 @@ async function fetchFromGitTsinghua(token = config.thudb.tokens.gitTsinghua) {
 			host: 'git.tsinghua.edu.cn',
 			path: `/api/v4/users?page=${page}&per_page=100`,
 			protocol: 'https:'
-		}).then(async ([_, data_raw]) => {
+		}).then(async ([, data_raw]) => {
 			let data: Data[];
 			try {
 				data = JSON.parse(<string><unknown>data_raw);
@@ -205,7 +205,7 @@ async function fetchFromGitTsinghua(token = config.thudb.tokens.gitTsinghua) {
 		})
 		if (page % 50 === 0) {
 			console.log('sleeping ...');
-			await new Promise((fulfill, reject) => setTimeout(fulfill, 4000));
+			await new Promise(fulfill => setTimeout(fulfill, 4000));
 		}
 	}
 	const

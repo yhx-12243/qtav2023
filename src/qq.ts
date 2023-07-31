@@ -10,6 +10,7 @@ let LOGGER: LOGGER_TYPE;
 interface Message {
 	syncId: number | '';
 	command?: string;
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	content?: any;
 	data?: {
 		code: number;
@@ -32,7 +33,7 @@ enum MemberJoinResult {
 	ACCEPT,
 	REJECT,
 	IGNORE,
-};
+}
 
 async function handleMemberJoin(event: MemberJoinRequestEvent): Promise<MemberJoinResult> {
 	try {
@@ -83,9 +84,9 @@ export function qqAdapter() {
 	const ws = new WebSocket(`ws://localhost:${config.mirai.port}/event?verifyKey=${config.mirai.verifyKey}&qq=${config.mirai.qq}`);
 	const noop: (x: string) => void = () => { };
 	let setSessionKey: (x: string) => void;
-	let sessionKey: Promise<string> = new Promise(set => setSessionKey = set);
+	const sessionKey: Promise<string> = new Promise(set => setSessionKey = set);
 
-	ws.on('message', async (data: RawData, isBinary: boolean) => {
+	ws.on('message', async (data: RawData) => {
 		let event: Message
 		try {
 			event = JSON.parse(<string><unknown>data);
@@ -107,7 +108,7 @@ export function qqAdapter() {
 		if (event.command !== 'resp_memberJoinRequestEvent') return;
 
 		const join = event.content;
-		let res = await handleMemberJoin(join);
+		const res = await handleMemberJoin(join);
 		if (res === MemberJoinResult.IGNORE) return;
 
 		ws.send(JSON.stringify({

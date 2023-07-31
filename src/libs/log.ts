@@ -5,7 +5,8 @@ import { format } from 'util';
 
 import { ROOT } from '../app';
 
-export type LOGGER_TYPE = (...args: any[]) => void;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type LOGGER_TYPE = (...args: [any, ...any]) => void;
 
 let LOGGER_PATH: string;
 
