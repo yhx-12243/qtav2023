@@ -9,13 +9,12 @@ let LOGGER: LOGGER_TYPE;
 
 interface Message {
 	syncId: number | '';
-	command?: string;
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	content?: any;
-	data?: {
-		code: number;
-		session: string;
-	};
+	data: SessionKeyEvent | MemberJoinRequestEvent;
+}
+
+interface SessionKeyEvent {
+	code: number;
+	session: string;
 }
 
 interface MemberJoinRequestEvent {
@@ -84,7 +83,7 @@ export function qqAdapter() {
 	const ws = new WebSocket(`ws://localhost:${config.mirai.port}/event?verifyKey=${config.mirai.verifyKey}&qq=${config.mirai.qq}`);
 	const noop: (x: string) => void = () => { };
 	let setSessionKey: (x: string) => void;
-	const sessionKey: Promise<string> = new Promise(set => setSessionKey = set);
+	const sessionKey = new Promise<string>(set => setSessionKey = set);
 
 	ws.on('message', async (data: RawData) => {
 		let event: Message
@@ -96,7 +95,7 @@ export function qqAdapter() {
 		}
 
 		if (event.syncId === '') {
-			const sk = event.data?.session;
+			const sk = (<SessionKeyEvent>event.data).session;
 			if (sk) {
 				LOGGER('receive %o', { sessionKey: sk });
 				setSessionKey(sk);
@@ -105,23 +104,28 @@ export function qqAdapter() {
 			return;
 		}
 
-		if (event.command !== 'resp_memberJoinRequestEvent') return;
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		switch ((<any>event.data)?.type) {
+			case 'MemberJoinRequestEvent': {
+				const join = <MemberJoinRequestEvent>event.data;
+				const res = await handleMemberJoin(join);
+				if (res === MemberJoinResult.IGNORE) return;
 
-		const join = event.content;
-		const res = await handleMemberJoin(join);
-		if (res === MemberJoinResult.IGNORE) return;
-
-		ws.send(JSON.stringify({
-			syncId: event.syncId,
-			data: {
-				sessionKey: await sessionKey,
-				eventId: join.eventId,
-				fromId: join.fromId,
-				groupId: join.groupId,
-				operator: res,
-				message: '',
+				ws.send(JSON.stringify({
+					syncId: event.syncId,
+					command: 'resp_memberJoinRequestEvent',
+					content: {
+						sessionKey: await sessionKey,
+						eventId: join.eventId,
+						fromId: join.fromId,
+						groupId: join.groupId,
+						operator: res,
+						message: '',
+					}
+				}));
+				break;
 			}
-		}));
+		}
 	})
 	.on('close', (code: number, reason: Buffer) => {
 		LOGGER('websocket closed: %o', { code, reason: reason.toString() });
