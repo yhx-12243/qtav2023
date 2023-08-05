@@ -1,8 +1,8 @@
 import pg from 'pg';
 import Pool = pg.Pool;
 
-import { type LOGGER_TYPE, getLogger } from './log';
 import { config } from '../app';
+import { getLogger, type LOGGER_TYPE } from './log';
 
 let LOGGER: LOGGER_TYPE;
 

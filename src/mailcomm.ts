@@ -5,7 +5,7 @@ import { resolve } from 'path';
 import { ROOT, config } from './app';
 import { pool } from './libs/db';
 import { POP3Socket, sendMail } from './libs/email';
-import { type LOGGER_TYPE, getLogger } from './libs/log';
+import { getLogger, type LOGGER_TYPE } from './libs/log';
 import { PRF } from './libs/prf';
 import { checkIntRange, getNextNumber, isDigit, sleep } from './util';
 

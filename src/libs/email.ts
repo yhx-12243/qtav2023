@@ -2,14 +2,14 @@ import assert from 'assert';
 import EventEmitter from 'events';
 import { simpleParser } from 'mailparser';
 import { Transporter, createTransport } from 'nodemailer';
-import Mail from 'nodemailer/lib/mailer';
+import { Options } from 'nodemailer/lib/mailer';
 import type { SentMessageInfo } from 'nodemailer/lib/smtp-transport/index.js';
 import { Interface, createInterface } from 'readline';
 import { connect, type TLSSocket } from 'tls';
 
 import { config } from '../app';
 import { checkIntRange } from '../util';
-import { type LOGGER_TYPE, getLogger } from './log';
+import { getLogger, type LOGGER_TYPE } from './log';
 
 let LOGGER: LOGGER_TYPE;
 
@@ -20,7 +20,7 @@ export function bootstrap() {
 	transporter = createTransport(config.mailer.transport, config.mailer.account);
 }
 
-export function sendMail(config: Mail.Options): Promise<SentMessageInfo> {
+export function sendMail(config: Options): Promise<SentMessageInfo> {
 	return transporter.sendMail(config);
 }
 

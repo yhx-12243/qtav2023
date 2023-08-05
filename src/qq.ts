@@ -1,9 +1,8 @@
 import { WebSocket, type RawData } from 'ws';
 
 import { config } from './app';
-import { pool } from './libs/db';
-import { type LOGGER_TYPE, getLogger } from './libs/log';
-import { validate } from './libs/prf';
+import { MemberJoinResult, handleMemberJoin, type MemberJoinRequestEvent } from './bot/handleMemberJoin';
+import { getLogger, type LOGGER_TYPE } from './libs/log';
 
 let LOGGER: LOGGER_TYPE;
 
@@ -17,70 +16,10 @@ interface SessionKeyEvent {
 	session: string;
 }
 
-interface MemberJoinRequestEvent {
-	type: 'MemberJoinRequestEvent';
-	eventId: number;
-	fromId: number;
-	groupId: number;
-	groupName: string;
-	nick: string;
-	message: string;
-	invitorId: number | null;
-}
-
-enum MemberJoinResult {
-	ACCEPT,
-	REJECT,
-	IGNORE,
-}
-
-async function handleMemberJoin(event: MemberJoinRequestEvent): Promise<MemberJoinResult> {
-	try {
-		const { fromId: qq, groupId, message } = event;
-		if (!config.mirai.groups.includes(groupId)) {
-			LOGGER('group %o is not tracked', event.groupId);
-			return MemberJoinResult.IGNORE;
-		}
-
-		const ct = message.trim(), time = new Date().getTime() / (config.security.tokenExpire * 1e3);
-
-		const r = validate(qq, time, ct);
-		if (!r) {
-			LOGGER('user %o try to join group %o with \'fake\' code %o, REJECT', qq, groupId, ct);
-			return MemberJoinResult.REJECT;
-		}
-
-		const { id, uid } = r;
-		LOGGER('%o', { qq, groupId, ct, id, uid });
-
-		const result = await pool.query({
-			name: 'fetch-name-from-id-uid',
-			text: 'select name from thudb where id = $1 and uid = $2',
-			values: [id, uid]
-		});
-		if (result.rowCount !== result.rows.length) {
-			LOGGER('db q11 error');
-			return MemberJoinResult.IGNORE;
-		}
-		if (result.rowCount !== 1) {
-			LOGGER('db q12 error: not found');
-			return MemberJoinResult.IGNORE;
-		}
-
-		const name = result.rows[0].name;
-		LOGGER(' -> %o, accept!', { name });
-
-		return MemberJoinResult.ACCEPT;
-	} catch (e) {
-		LOGGER(e);
-		return MemberJoinResult.IGNORE;
-	}
-}
-
 export function qqAdapter() {
 	LOGGER = getLogger('qqBotServer');
 
-	const ws = new WebSocket(`ws://localhost:${config.mirai.port}/event?verifyKey=${config.mirai.verifyKey}&qq=${config.mirai.qq}`);
+	const ws = new WebSocket(`ws://localhost:${config.mirai.port}/all?verifyKey=${config.mirai.verifyKey}&qq=${config.mirai.qq}`);
 	const noop: (x: string) => void = () => { };
 	let setSessionKey: (x: string) => void;
 	const sessionKey = new Promise<string>(set => setSessionKey = set);
@@ -127,8 +66,8 @@ export function qqAdapter() {
 			}
 		}
 	})
-	.on('close', (code: number, reason: Buffer) => {
-		LOGGER('websocket closed: %o', { code, reason: reason.toString() });
-		process.exit(1);
-	});
+		.on('close', (code: number, reason: Buffer) => {
+			LOGGER('websocket closed: %o', { code, reason: reason.toString() });
+			process.exit(1);
+		});
 }
