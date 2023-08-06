@@ -6,15 +6,15 @@ import { LOGGER_TYPE, getLogger } from '../libs/log';
 let LOGGER: LOGGER_TYPE;
 
 export function register(ws: WebSocket) {
-	LOGGER = getLogger('qqBotServer:cardLint');
+	LOGGER = getLogger('qqBotServer:codeVerify');
 	ws.send(JSON.stringify({
 		syncId: '',
 		command: 'cmd_register',
 		content: {
-			name: 'card-lint',
-			alias: ['card-clippy'],
-			usage: '/card-lint',
-			description: '群名片规范检查器',
+			name: 'code-verify',
+			alias: [],
+			usage: '/code-verify [qq]',
+			description: '检查验证码可用性',
 		},
 	}));
 }

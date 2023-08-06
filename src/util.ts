@@ -10,6 +10,22 @@ export function isDigit(x: number) {
 	return 48 <= x && x <= 57;
 }
 
+export function getPrevNumber(buffer: Buffer): number {
+	let len: number = buffer.length;
+	if (len < 5) return 0;
+
+	let i: number;
+	for (i = 0; i < 10 && isDigit(buffer[len - i - 1]); ++i);
+	if (i < 5 || i >= 10) return 0;
+
+	const u = buffer.subarray(len - i), v = Number(u);
+	if (u.toString() === v.toString()) {
+		u.fill(0);
+		return v;
+	}
+	return 0;
+}
+
 export function getNextNumber(buffer: Buffer): number {
 	let i: number;
 	for (i = 0; i < 16 && !isDigit(buffer[i]); ++i);

@@ -2,7 +2,8 @@ import { WebSocket, type RawData } from 'ws';
 
 import { config } from './app';
 import { handleMemberJoin, type MemberJoinRequestEvent } from './bot/handleMemberJoin';
-import { register as cardLintRegister, handleCardLint } from './bot/cardLint';
+import { register as cardLintRegister, handle as handleCardLint } from './bot/cardLint';
+import { register as codeVerifyRegister, handle as handleCodeVerify } from './bot/cardLint';
 import { getLogger, type LOGGER_TYPE } from './libs/log';
 
 let LOGGER: LOGGER_TYPE;
@@ -51,6 +52,7 @@ export function qqAdapter() {
 				setSessionKey(sk);
 				setSessionKey = noop;
 				cardLintRegister(ws);
+				codeVerifyRegister(ws);
 			}
 			return;
 		}
@@ -64,10 +66,14 @@ export function qqAdapter() {
 			}
 			case 'CommandExecutedEvent': {
 				const ctx = <CommandExecutedEvent>event.data;
-				LOGGER('receive command %o', ctx.name);
+				LOGGER('receive command %o', ctx);
 				switch (ctx.name) {
 					case 'card-lint': {
 						await handleCardLint(ctx, ws, event.syncId, sessionKey);
+						break;
+					}
+					case 'code-verify': {
+						await handleCodeVerify(ctx, ws, event.syncId, sessionKey);
 						break;
 					}
 				}

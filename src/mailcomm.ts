@@ -7,7 +7,7 @@ import { pool } from './libs/db';
 import { POP3Socket, sendMail } from './libs/email';
 import { getLogger, type LOGGER_TYPE } from './libs/log';
 import { PRF } from './libs/prf';
-import { checkIntRange, getNextNumber, isDigit, sleep } from './util';
+import { checkIntRange, getPrevNumber, isDigit, sleep } from './util';
 
 let LOGGER: LOGGER_TYPE, LOGGER_STAGE: LOGGER_TYPE;
 
@@ -60,17 +60,12 @@ async function checkMailBox() {
 			continue;
 		}
 		try {
-			textBuffered = Buffer.from(email.text!);
-			const isQ = (x: number) => x === 81 || x === 113;
-			for (let i = 0; i + 3 < textBuffered.length; ++i) {
-				if (isQ(textBuffered[i]) && isQ(textBuffered[i + 1])) {
-					const t = getNextNumber(textBuffered.subarray(i + 2));
-					if (t > 0) {
-						qq = t;
-						break;
-					} else {
-						i -= t;
-					}
+			textBuffered = Buffer.from(email.text!.toLowerCase());
+			for (let i = 0; (i = textBuffered.indexOf('@qq.com', i)) >= 0; ++i) {
+				const t = getPrevNumber(textBuffered.subarray(0, i));
+				if (t > 0) {
+					qq = t;
+					break;
 				}
 			}
 			if (!qq) {
