@@ -1,3 +1,5 @@
+import { WebSocket } from 'ws';
+
 import { config } from '../app';
 import { pool } from '../libs/db';
 import { getLogger, type LOGGER_TYPE } from '../libs/log';
@@ -16,13 +18,13 @@ export interface MemberJoinRequestEvent {
 	invitorId: number | null;
 }
 
-export enum MemberJoinResult {
+enum MemberJoinResult {
 	ACCEPT,
 	REJECT,
 	IGNORE,
 }
 
-export async function handleMemberJoin(event: MemberJoinRequestEvent): Promise<MemberJoinResult> {
+async function handleMemberJoin_inner(event: MemberJoinRequestEvent): Promise<MemberJoinResult> {
 	LOGGER ??= getLogger('qqBotServer:memberJoin');
 	try {
 		const { fromId: qq, groupId, message } = event;
@@ -64,4 +66,22 @@ export async function handleMemberJoin(event: MemberJoinRequestEvent): Promise<M
 		LOGGER(e);
 		return MemberJoinResult.IGNORE;
 	}
+}
+
+export async function handleMemberJoin(event: MemberJoinRequestEvent, ws: WebSocket, syncId: number, sessionKey: Promise<string>) {
+	const res = await handleMemberJoin_inner(event);
+	if (res === MemberJoinResult.IGNORE) return;
+
+	ws.send(JSON.stringify({
+		syncId,
+		command: 'resp_memberJoinRequestEvent',
+		content: {
+			sessionKey: await sessionKey,
+			eventId: event.eventId,
+			fromId: event.fromId,
+			groupId: event.groupId,
+			operator: res,
+			message: '',
+		},
+	}));
 }

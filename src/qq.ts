@@ -1,19 +1,30 @@
 import { WebSocket, type RawData } from 'ws';
 
 import { config } from './app';
-import { MemberJoinResult, handleMemberJoin, type MemberJoinRequestEvent } from './bot/handleMemberJoin';
+import { handleMemberJoin, type MemberJoinRequestEvent } from './bot/handleMemberJoin';
+import { register as cardLintRegister, handleCardLint } from './bot/cardLint';
 import { getLogger, type LOGGER_TYPE } from './libs/log';
 
 let LOGGER: LOGGER_TYPE;
 
 interface Message {
 	syncId: number | '';
-	data: SessionKeyEvent | MemberJoinRequestEvent;
+	data: SessionKeyEvent | MemberJoinRequestEvent | CommandExecutedEvent;
 }
 
 interface SessionKeyEvent {
 	code: number;
 	session: string;
+}
+
+export interface CommandExecutedEvent {
+	type: 'CommandExecutedEvent';
+	eventId: number;
+	/** Command name. */
+	name: string;
+	friend: object;
+	member: object;
+	args: object[];
 }
 
 export function qqAdapter() {
@@ -39,6 +50,7 @@ export function qqAdapter() {
 				LOGGER('receive %o', { sessionKey: sk });
 				setSessionKey(sk);
 				setSessionKey = noop;
+				cardLintRegister(ws);
 			}
 			return;
 		}
@@ -47,21 +59,18 @@ export function qqAdapter() {
 		switch ((<any>event.data)?.type) {
 			case 'MemberJoinRequestEvent': {
 				const join = <MemberJoinRequestEvent>event.data;
-				const res = await handleMemberJoin(join);
-				if (res === MemberJoinResult.IGNORE) return;
-
-				ws.send(JSON.stringify({
-					syncId: event.syncId,
-					command: 'resp_memberJoinRequestEvent',
-					content: {
-						sessionKey: await sessionKey,
-						eventId: join.eventId,
-						fromId: join.fromId,
-						groupId: join.groupId,
-						operator: res,
-						message: '',
+				await handleMemberJoin(join, ws, event.syncId, sessionKey);
+				break;
+			}
+			case 'CommandExecutedEvent': {
+				const ctx = <CommandExecutedEvent>event.data;
+				LOGGER('receive command %o', ctx.name);
+				switch (ctx.name) {
+					case 'card-lint': {
+						await handleCardLint(ctx, ws, event.syncId, sessionKey);
+						break;
 					}
-				}));
+				}
 				break;
 			}
 		}
