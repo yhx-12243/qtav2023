@@ -164,7 +164,7 @@ async function checkMailBox() {
 code{background-color:rgba(0,0,0,.08);border-radius:3px;display:inline-block;font-family:Menlo,Monaco,Consolas,Courier New,monospace;font-size:.857142857rem;padding:1px 4px}\
 </style>\
 <p>${name} 同学您好！</p><p>您正在使用清华大学 2023 级新生群自动审核功能 (<a href="https://github.com/yhx-12243/qtav2023" target="_blank">Project QTAV2023</a>)。</p>\
-<p>目前该协议支持的群号有：${config.mirai.groups.join(', ')}。</p>
+<p>目前该协议支持的群号有：${config.mirai.groups.join(', ')}。</p>\
 <p>请再次确认您的个人信息无误：您的学号为 ${id}，用户名为 ${uid}。</p>\
 <p>加群的验证码 (即回答的问题) 为 <code>${prf}</code>，有效期 60 分钟。</p>\
 <p>如遇到困难，请联系 <a href="mailto:${config.contact.name}&lt;${config.contact.address}&gt;">${config.contact.address}</a> 或直接在审核群里提出。</p>\

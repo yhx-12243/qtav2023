@@ -2,13 +2,14 @@ import { WebSocket } from 'ws';
 
 import { CommandExecutedEvent } from '../qq';
 import { LOGGER_TYPE, getLogger } from '../libs/log';
+import { genSyncId } from '../util';
 
 let LOGGER: LOGGER_TYPE;
 
 export function register(ws: WebSocket) {
 	LOGGER = getLogger('qqBotServer:codeVerify');
 	ws.send(JSON.stringify({
-		syncId: '',
+		syncId: genSyncId(),
 		command: 'cmd_register',
 		content: {
 			name: 'code-verify',
@@ -19,6 +20,6 @@ export function register(ws: WebSocket) {
 	}));
 }
 
-export async function handle(event: CommandExecutedEvent, ws: WebSocket, syncId: number, sessionKey: Promise<string>) {
+export async function handle(event: CommandExecutedEvent, ws: WebSocket, sessionKey: Promise<string>) {
 	// todo!()
 }

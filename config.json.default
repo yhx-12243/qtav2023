@@ -32,6 +32,15 @@
 			"user": /* user */
 		}
 	},
+	"lint": {
+		"duration": 60,
+		"whitelist": {
+			"2854196310": {
+				"level": 0,
+				"info": "Bot"
+			}
+		}
+	},
 	"mirai": {
 		"port": 8080,
 		"groups": [

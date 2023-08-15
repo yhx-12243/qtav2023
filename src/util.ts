@@ -1,3 +1,5 @@
+import { randomBytes } from 'crypto';
+
 export function sleep(timeout: number) {
 	return new Promise(fulfill => setTimeout(fulfill, timeout));
 }
@@ -11,12 +13,12 @@ export function isDigit(x: number) {
 }
 
 export function getPrevNumber(buffer: Buffer): number {
-	let len: number = buffer.length;
+	const len: number = buffer.length;
 	if (len < 5) return 0;
 
 	let i: number;
-	for (i = 0; i < 10 && isDigit(buffer[len - i - 1]); ++i);
-	if (i < 5 || i >= 10) return 0;
+	for (i = 0; i < 11 && isDigit(buffer[len - i - 1]); ++i);
+	if (i < 5 || i >= 11) return 0;
 
 	const u = buffer.subarray(len - i), v = Number(u);
 	if (u.toString() === v.toString()) {
@@ -41,4 +43,8 @@ export function getNextNumber(buffer: Buffer): number {
 		return v;
 	}
 	return -j;
+}
+
+export function genSyncId() {
+	return randomBytes(4).toString('hex');
 }

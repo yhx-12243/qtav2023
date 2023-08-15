@@ -4,6 +4,7 @@ import { config } from '../app';
 import { pool } from '../libs/db';
 import { getLogger, type LOGGER_TYPE } from '../libs/log';
 import { validate } from '../libs/prf';
+import { genSyncId } from '../util';
 
 let LOGGER: LOGGER_TYPE;
 
@@ -24,7 +25,7 @@ enum MemberJoinResult {
 	IGNORE,
 }
 
-async function handleMemberJoin_inner(event: MemberJoinRequestEvent): Promise<MemberJoinResult> {
+async function _inner(event: MemberJoinRequestEvent): Promise<MemberJoinResult> {
 	LOGGER ??= getLogger('qqBotServer:memberJoin');
 	try {
 		const { fromId: qq, groupId, message } = event;
@@ -68,12 +69,12 @@ async function handleMemberJoin_inner(event: MemberJoinRequestEvent): Promise<Me
 	}
 }
 
-export async function handleMemberJoin(event: MemberJoinRequestEvent, ws: WebSocket, syncId: number, sessionKey: Promise<string>) {
-	const res = await handleMemberJoin_inner(event);
+export async function handle(event: MemberJoinRequestEvent, ws: WebSocket, sessionKey: Promise<string>) {
+	const res = await _inner(event);
 	if (res === MemberJoinResult.IGNORE) return;
 
 	ws.send(JSON.stringify({
-		syncId,
+		syncId: genSyncId(),
 		command: 'resp_memberJoinRequestEvent',
 		content: {
 			sessionKey: await sessionKey,
