@@ -57,6 +57,7 @@
 	},
 	"thudb": {
 		"tokens": {
+			"parse": /* "JSESSIONID" cookie in kyxxxt.cic.tsinghua.edu.cn */,
 			"cloudSessionId": /* "sessionid" cookie in cloud.tsinghua.edu.cn */,
 			"gitTsinghua": /* gitlab token */
 		}

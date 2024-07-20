@@ -1,14 +1,18 @@
 import { strict as assert } from 'assert';
-import { readFileSync } from 'fs';
+import { execFile } from 'child_process';
+import { readFileSync, unlinkSync } from 'fs';
 import { type RequestOptions, request as httpRequest, IncomingHttpHeaders } from 'http';
 import { request as httpsRequest } from 'https';
 import pg from 'pg';
-import Client = pg.Client;
+import { promisify } from 'util';
+
 import { pinyin } from 'pinyin-pro';
 
 import config from '../config.json' assert { type: 'json' };
 
-const conn = new Client(config.database);
+const execInner = promisify(execFile);
+
+const conn = new pg.Client(config.database);
 await conn.connect();
 
 function request(config: RequestOptions & { end: boolean }): Promise<[IncomingHttpHeaders, Buffer]> {
@@ -39,13 +43,31 @@ function initExistingData() {
 	for (const [key, val] of Object.entries(faculty_aliases)) faculty_dict[key] = faculty_dict[val];
 }
 
-async function parseHtmlData(path = 'cor.html') {
+async function parseHtmlData(JSESSIONID: string) {
 	initExistingData();
 	const
 		data: { id: number, name: string, faculty: string }[] = [],
 		errs = new Set(),
 		data_reg = /^\s*<option value="(\d+)">(\d+)\/(.+)\/([^</]+)<\/option>\s*$/;
-	for (const line of readFileSync(path, 'utf8').split('\n')) {
+	let stdout;
+	{
+		const path = `${process.hrtime.bigint()}`;
+		await execInner('curl', [
+			'-k',
+			'-o', path,
+			'http://kyxxxt.cic.tsinghua.edu.cn/hjzl.hj_jbqk.do?m=add_wcry&xm=&inputname=p_1_wcrzjh',
+			'-H', `Cookie: JSESSIONID=${JSESSIONID}; serverid=1425456`,
+		]);
+		({ stdout } = await execInner('iconv', [
+			'-c',
+			'-f', 'gbk',
+			path,
+		], { maxBuffer: Infinity }));
+		unlinkSync(path);
+	}
+	console.log('fetch completed:', stdout.length, 'characters');
+
+	for (const line of stdout.split('\n')) {
 		const match = line.match(data_reg);
 		if (!match) continue;
 		try {
@@ -53,7 +75,7 @@ async function parseHtmlData(path = 'cor.html') {
 			const id = Number(match[1]);
 			assert(Number.isSafeInteger(id));
 			if (id < 2018e6) continue;
-			const name = match[3];
+			const name = match[3].trim();
 			const faculty = match[4];
 			if (!faculty_dict[faculty]) {
 				errs.add(faculty);
@@ -117,7 +139,7 @@ function getAvailableUid(name: string) {
 }
 
 const STOP = '@0';
-async function fetchUid(sessionid = config.thudb.tokens.cloudSessionId) {
+async function fetchUid(sessionid: string) {
 	const noUID = [];
 
 	for (const entry of thudb) {
@@ -133,9 +155,9 @@ async function fetchUid(sessionid = config.thudb.tokens.cloudSessionId) {
 				console.log((<Error>e).message + ':', entry);
 			}
 		} else if (entry.uid != STOP) { // no uid
-			if (entry.id % 1e6 < 5e5) {
+			// if (entry.id % 1e6 < 5e5) {
 				noUID.push(entry);
-			}
+			// }
 		}
 	}
 	const promises = [];
@@ -169,48 +191,54 @@ async function fetchUid(sessionid = config.thudb.tokens.cloudSessionId) {
 				console.log(entry, err);
 			})
 		);
-		await Promise.all(promises);
-		if (++stamp % 100 === 0) {
+		if (++stamp % 50 === 0) {
+			await Promise.all(promises);
 			console.log('sleeping %o / %o ...', stamp, noUID.length);
-			await new Promise(fulfill => setTimeout(fulfill, 2000));
+			await new Promise(fulfill => setTimeout(fulfill, 1250));
 		}
 	}
+	await Promise.all(promises);
 }
 
-async function fetchFromGitTsinghua(token = config.thudb.tokens.gitTsinghua) {
+async function fetchFromGitTsinghua(token: string) {
 	type Data = { name: string, username: string };
 	const datalist: Data[][] = []; let flags = true;
+	const promises = [];
 	for (let page = 1; flags; ++page) {
 		console.log('page', page);
-		await request({
-			end: true,
-			headers: {
-				'private-token': token
-			},
-			host: 'git.tsinghua.edu.cn',
-			path: `/api/v4/users?page=${page}&per_page=100`,
-			protocol: 'https:'
-		}).then(async ([, data_raw]) => {
-			let data: Data[];
-			try {
-				data = JSON.parse(<string><unknown>data_raw);
-			} catch (e) {
-				return console.log(page, data_raw, e);
-			}
-			console.log('\tlength =', data.length);
-			if (data.length) datalist.push(data);
-			else flags = false;
-		}, err => {
-			console.log(page, err);
-		})
-		if (page % 50 === 0) {
+		promises.push(
+			request({
+				end: true,
+				headers: {
+					'private-token': token
+				},
+				host: 'git.tsinghua.edu.cn',
+				path: `/api/v4/users?page=${page}&per_page=100`,
+				protocol: 'https:'
+			}).then(async ([, data_raw]) => {
+				let data: Data[];
+				try {
+					data = JSON.parse(<string><unknown>data_raw);
+				} catch (e) {
+					return console.log(page, data_raw, e);
+				}
+				console.log('\tlength =', data.length);
+				if (data.length) datalist.push(data);
+				else flags = false;
+			}, err => {
+				console.log(page, err);
+			})
+		);
+		if (page % 20 === 0) {
+			await Promise.all(promises);
 			console.log('sleeping ...');
-			await new Promise(fulfill => setTimeout(fulfill, 4000));
+			await new Promise(fulfill => setTimeout(fulfill, 1250));
 		}
 	}
 	const
 		datas = datalist.flat(),
 		uid_reg = /^\D+(\d{2})$/;
+	datas.sort((d1, d2) => d1.name < d2.name ? -1 : d1.name > d2.name);
 	for (const { name, username } of datas) {
 		const match = username.match(uid_reg);
 		if (!match) continue;
@@ -219,7 +247,7 @@ async function fetchFromGitTsinghua(token = config.thudb.tokens.gitTsinghua) {
 		if (year < 18) continue;
 
 		let candidates = thudb.filter(
-			entry => entry.name === name && Math.floor(entry.id / 1e6) % 100 === year
+			entry => entry.name === name && Math.floor(entry.id / 1e6) % 100 === year && entry.id % 1e6 < 5e5
 		);
 		if (candidates.some(entry => entry.uid === username)) continue;
 		candidates = candidates.filter(entry => entry.uid === '' || entry.uid === STOP);
@@ -233,10 +261,12 @@ async function fetchFromGitTsinghua(token = config.thudb.tokens.gitTsinghua) {
 
 const exit = () => process.exit(0);
 
-// parseHtmlData().then(exit);
-
-// fetchUid().then(exit);
-
-// fetchFromGitTsinghua().then(exit);
+if (process.argv.includes('--uid')) {
+	fetchUid(config.thudb.tokens.cloudSessionId).then(exit);
+} else if (process.argv.includes('--git')) {
+	fetchFromGitTsinghua(config.thudb.tokens.gitTsinghua).then(exit);
+} else {
+	parseHtmlData(config.thudb.tokens.parse).then(exit);
+}
 
 export { thudb };
