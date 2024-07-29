@@ -3,4 +3,6 @@
 /src/libs/prf.ts
 config.json
 lastCheck
-package-lock.json
+
+.yarn/*
+!.yarn/patches

@@ -1,7 +1,7 @@
 {
 	"dependencies": {
 		"bufferutil": "^4.0.8",
-		"debug": "^4.3.5",
+		"debug": "^4.3.6",
 		"mailparser": "^3.7.1",
 		"nodemailer": "^6.9.14",
 		"pg": "^8.12.0",
@@ -11,24 +11,25 @@
 	"devDependencies": {
 		"@types/debug": "^4.1.12",
 		"@types/mailparser": "^3.4.4",
-		"@types/node": "^20.14.11",
+		"@types/node": "^22.0.0",
 		"@types/nodemailer": "^6.4.15",
 		"@types/pg": "^8.11.6",
-		"@types/ws": "^8.5.11",
-		"@typescript-eslint/eslint-plugin": "^7.16.1",
-		"eslint": "^9.7.0",
-		"pinyin-pro": "^3.23.1"
+		"@types/ws": "^8.5.12",
+		"@typescript-eslint/eslint-plugin": "^7.17.0",
+		"eslint": "^9.8.0",
+		"pinyin-pro": "^3.24.0",
+		"tsx": "^4.16.2"
 	},
-	"overrides": {
-		"eslint": "^9.7.0",
-		"nodemailer": "^6.9.14"
-	},
+	"packageManager": "yarn@^4.3.1",
 	"private": true,
+	"resolutions": {
+		"nodemailer@npm:6.9.13": "^6.9.14"
+	},
 	"scripts": {
 		"check": "tsc --noEmit",
 		"dev": "DEBUG=* DEBUG_BREAK_LENGTH=160 tsx --no-warnings src/app",
 		"start": "tsx --no-warnings src/app",
-		"lint": "eslint \"src/**/*.{ts,js,tsx,jsx}\""
+		"lint": "eslint src"
 	},
 	"type": "module"
 }
