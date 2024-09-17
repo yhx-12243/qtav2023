@@ -86,7 +86,7 @@ async function parseHtmlData(JSESSIONID: string) {
 			console.log(line);
 		}
 	}
-	// console.log(errs);
+	console.log(errs);
 
 	for (const { id, name, faculty } of data) {
 		const fentry = faculty_dict[faculty];
